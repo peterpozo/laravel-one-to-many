@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Post;
+use App\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
@@ -44,7 +45,11 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('admin.posts.create');
+        $categories = Category::all('id', 'name');
+
+        return view('admin.posts.create', [
+            'categories'    => $categories,
+        ]);
     }
 
     /**
@@ -56,9 +61,10 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'title'         => 'required|string|max:100',
             'slug'          => 'required|string|max:100|unique:posts',
-            'title'         =>  'required|string|max:100',
-            'image'         => 'string|string|max:100',
+            'category_id'   => 'required|integer|exists:categories,id',
+            'image'         => 'url|max:100',
             'uploaded_img'  => 'image|max:1024',
             'content'       => 'string',
             'excerpt'       => 'string',
@@ -67,16 +73,16 @@ class PostController extends Controller
 
         $data = $request->all();
 
-        $img_path = Storage::put('uploads', $data['uploaded_img']);
+        $img_path = isset($data['uploaded_img']) ? Storage::put('uploads', $data['uploaded_img']) : null;
 
 
         $post = new Post;
-        $post->slug    = $data['slug'];
-        $post->title   = $data['title'];
-        $post->image   = $data['image'];
+        $post->slug          = $data['slug'];
+        $post->title         = $data['title'];
+        $post->image         = $data['image'];
         $post->uploaded_img  = $img_path;
-        $post->content = $data['content'];
-        $post->excerpt = $data['excerpt'];
+        $post->content       = $data['content'];
+        $post->excerpt       = $data['excerpt'];
         $post->save();
 
         return redirect()->route('admin.posts.show', ['post' => $post]);

@@ -10,4 +10,10 @@ class Category extends Model
     use Slugger;
 
     public $timestamps = false;
+
+    public function posts() {
+        return $this->hasMany('App\Post');
+    }
+
+
 }
